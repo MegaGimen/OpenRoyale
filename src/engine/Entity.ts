@@ -265,16 +265,21 @@ export class Entity {
             this.target = null;
         }
 
+        let isInAttackRange = false;
         if (this.target) {
             const dist = this.pos.distanceTo(this.target.pos) - this.stats.radius - this.target.stats.radius;
             // Buildings drop target immediately if out of range
             if (this.stats.speed === 0) {
                 if (dist > this.stats.range) {
                     this.target = null;
+                } else {
+                    isInAttackRange = true;
                 }
             } else {
                 if (dist > this.stats.sightRange + 2) { // Kited too far
                     this.target = null;
+                } else if (dist <= this.stats.range) {
+                    isInAttackRange = true;
                 }
             }
         }
@@ -282,15 +287,19 @@ export class Entity {
         if (this.wasNudged) {
             this.target = null;
             this.wasNudged = false;
+            isInAttackRange = false;
         }
 
-        // Only search for a new target if we don't have one
-        if (!this.target) {
-            let bestTarget: Entity | null = null;
-            let bestDist = this.stats.sightRange;
+        // Search for a new target if we don't have one, OR if we are currently pursuing (not in attack range)
+        if (!this.target || !isInAttackRange) {
+            let bestTarget: Entity | null = this.target;
+            let bestDist = this.target ? 
+                (this.pos.distanceTo(this.target.pos) - this.stats.radius - this.target.stats.radius) : 
+                this.stats.sightRange;
 
             for (const entity of this.game.entities) {
                 if (entity.team === this.team || entity.hp <= 0) continue;
+                if (entity === this.target) continue; // Already our target
                 if (entity.currentAbilityEffect === 'cloaking_cape') continue; // Untargetable
                 if (this.stats.isBuildingTargeter && entity.stats.type === 'troop') continue;
                 if (this.stats.targetType === 'ground' && entity.stats.isAir) continue;
@@ -298,13 +307,16 @@ export class Entity {
 
                 const dist = this.pos.distanceTo(entity.pos) - this.stats.radius - entity.stats.radius;
                 
-                if (dist <= bestDist) {
+                // If pursuing, require the new target to be strictly closer by a small margin to prevent flickering
+                if (dist <= bestDist - (this.target ? 0.2 : 0)) {
                     bestDist = dist;
                     bestTarget = entity;
                 }
             }
 
-            this.target = bestTarget;
+            if (bestTarget !== this.target) {
+                this.target = bestTarget;
+            }
         }
     }
 
