@@ -130,6 +130,7 @@ function initRenderer() {
     river.style.top = `${CONFIG.RIVER_Y_START * pxPerTileY}px`;
     river.style.width = '100%';
     river.style.height = `${(CONFIG.RIVER_Y_END - CONFIG.RIVER_Y_START) * pxPerTileY}px`;
+    river.style.zIndex = '1';
     container.appendChild(river);
 
     // Add Bridges
@@ -141,6 +142,7 @@ function initRenderer() {
         bridge.style.top = `${CONFIG.RIVER_Y_START * pxPerTileY}px`;
         bridge.style.width = `${CONFIG.BRIDGE_WIDTH * pxPerTileX}px`;
         bridge.style.height = `${(CONFIG.RIVER_Y_END - CONFIG.RIVER_Y_START) * pxPerTileY}px`;
+        bridge.style.zIndex = '2';
         container.appendChild(bridge);
     });
 
@@ -363,7 +365,19 @@ function initRenderer() {
 
                 const charPrefixStr = charFolder.startsWith('building_') ? charFolder : `chr_${charFolder}`;
                 const t = performance.now() / 1000;
-                const frameIndex = Math.floor(t * 12);
+                const frameIndex = Math.floor(t * 30);
+                
+                let animProgress = -1;
+                if (action === 'attack') {
+                    const loadTime = entity.stats.loadTime || (entity.stats.hitSpeed * 0.5);
+                    if (entity.isAttacking) {
+                        animProgress = (loadTime - entity.actionFrameTimer) / entity.stats.hitSpeed;
+                    } else {
+                        const cooldownTotal = entity.stats.hitSpeed - loadTime;
+                        animProgress = (loadTime + (cooldownTotal - entity.attackCooldown)) / entity.stats.hitSpeed;
+                    }
+                    animProgress = Math.max(0, Math.min(1, animProgress));
+                }
                 
                 const isRed = entity.team === 'red';
                 const actionToPass = isTower ? staticAnimKey : action;
@@ -373,15 +387,36 @@ function initRenderer() {
                 div.style.border = 'none';
 
                 let finalFrameIndex = frameIndex;
+                let aimAngle = -1;
+                let overrideFlipX: boolean | null = null;
+                
                 if (entity.stats.name === 'King Tower') {
                     if (entity.activationState === 'asleep') {
                         finalFrameIndex = 0;
+                        animProgress = -1;
                     } else if (entity.activationState === 'activating') {
-                        const totalFrames = 97;
-                        finalFrameIndex = Math.max(0, totalFrames - Math.floor(entity.activationTimer * 12));
-                    } else {
-                        finalFrameIndex = 97;
+                        animProgress = Math.max(0, 1 - (entity.activationTimer / (97/30.0)));
+                        finalFrameIndex = 97; // Actually it doesn't matter since animProgress overrides it
+                    } else if (entity.activationState === 'awake') {
+                        finalFrameIndex = 97; // idle frame for active king
+                        animProgress = -1; // STOP root animation from looping attack progress!
+                        
+                        let angleDeg = Math.atan2(entity.facingDirection.y, entity.facingDirection.x) * 180 / Math.PI;
+                        if (angleDeg < 0) angleDeg += 360;
+                        
+                        // Map to SC Angle (0 is Up, 180 is Down)
+                        let scAngle = (angleDeg + 90) % 360;
+                        
+                        if (scAngle <= 180) {
+                            overrideFlipX = false;
+                            aimAngle = Math.min(35, Math.round(scAngle / 5));
+                        } else {
+                            overrideFlipX = true;
+                            aimAngle = Math.min(35, Math.round((360 - scAngle) / 5));
+                        }
                     }
+                } else if (entity.stats.name === 'Princess Tower') {
+                    finalFrameIndex = frameIndex; // let SCRenderer handle princess logic
                 }
 
                 SCRenderer.updateEntity(
@@ -389,12 +424,15 @@ function initRenderer() {
                     charPrefixStr, 
                     actionToPass, 
                     dirSuffix, 
-                    isRed, 
+                    entity.team === 'red', 
                     finalFrameIndex, 
                     entity.pos.x * pxPerTileX, 
                     entity.pos.y * pxPerTileY, 
                     0.55,
-                    action
+                    action,
+                    aimAngle,
+                    overrideFlipX,
+                    animProgress
                 );
                 
                 scaleMultiplier = 0.55;

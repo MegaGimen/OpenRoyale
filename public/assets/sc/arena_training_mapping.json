@@ -1,0 +1,275 @@
+{
+    "training_deco2": {
+        "frames": 1,
+        "shapes": [
+            [
+                0
+            ]
+        ]
+    },
+    "training_deco1": {
+        "frames": 1,
+        "shapes": [
+            [
+                1
+            ]
+        ]
+    },
+    "bush02": {
+        "frames": 1,
+        "shapes": [
+            [
+                2
+            ]
+        ]
+    },
+    "bush01": {
+        "frames": 1,
+        "shapes": [
+            [
+                3
+            ]
+        ]
+    },
+    "training_cliffs_right": {
+        "frames": 1,
+        "shapes": [
+            [
+                4
+            ]
+        ]
+    },
+    "training_cliffs_left": {
+        "frames": 1,
+        "shapes": [
+            [
+                5
+            ]
+        ]
+    },
+    "atlasgenerator_texture_rgb565": {
+        "frames": 1,
+        "shapes": [
+            [
+                6
+            ]
+        ]
+    },
+    "tree02": {
+        "frames": 1,
+        "shapes": [
+            [
+                7
+            ]
+        ]
+    },
+    "tree01": {
+        "frames": 1,
+        "shapes": [
+            [
+                8
+            ]
+        ]
+    },
+    "tree03": {
+        "frames": 1,
+        "shapes": [
+            [
+                9
+            ]
+        ]
+    },
+    "tree_group01": {
+        "frames": 1,
+        "shapes": [
+            [
+                9,
+                8,
+                7,
+                8,
+                7,
+                8
+            ]
+        ]
+    },
+    "cliff07": {
+        "frames": 1,
+        "shapes": [
+            [
+                10
+            ]
+        ]
+    },
+    "cliff06": {
+        "frames": 1,
+        "shapes": [
+            [
+                11
+            ]
+        ]
+    },
+    "cliff05": {
+        "frames": 1,
+        "shapes": [
+            [
+                12
+            ]
+        ]
+    },
+    "cliff04": {
+        "frames": 1,
+        "shapes": [
+            [
+                13
+            ]
+        ]
+    },
+    "cliff03": {
+        "frames": 1,
+        "shapes": [
+            [
+                14
+            ]
+        ]
+    },
+    "cliff02": {
+        "frames": 1,
+        "shapes": [
+            [
+                15
+            ]
+        ]
+    },
+    "cliff01": {
+        "frames": 1,
+        "shapes": [
+            [
+                16
+            ]
+        ]
+    },
+    "fence_right_front": {
+        "frames": 1,
+        "shapes": [
+            [
+                17
+            ]
+        ]
+    },
+    "fence_left_back": {
+        "frames": 1,
+        "shapes": [
+            [
+                18
+            ]
+        ]
+    },
+    "fence_left_front": {
+        "frames": 1,
+        "shapes": [
+            [
+                19
+            ]
+        ]
+    },
+    "fence_right_back": {
+        "frames": 1,
+        "shapes": [
+            [
+                20
+            ]
+        ]
+    },
+    "training_area_bg": {
+        "frames": 1,
+        "shapes": [
+            [
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                21,
+                22
+            ]
+        ]
+    }
+}

@@ -8,6 +8,7 @@ export const Cards: Record<string, EntityStats> = {
         hp: 1666,
         damage: 202,
         hitSpeed: 1.2,
+        loadTime: 0.7,
         speed: 1.0, // Medium
         range: 0.8, // Melee
         sightRange: 5.5,
@@ -23,6 +24,7 @@ export const Cards: Record<string, EntityStats> = {
         hp: 304,
         damage: 107,
         hitSpeed: 0.9,
+        loadTime: 1.1,
         speed: 1.0, // Medium
         range: 5.0,
         sightRange: 5.5,
@@ -41,6 +43,7 @@ export const Cards: Record<string, EntityStats> = {
         hp: 4091,
         damage: 254,
         hitSpeed: 1.5,
+        loadTime: 1.0,
         speed: 0.75, // Slow
         range: 0.8,
         sightRange: 5.5,
@@ -57,6 +60,7 @@ export const Cards: Record<string, EntityStats> = {
         hp: 3760,
         damage: 816,
         hitSpeed: 1.8,
+        loadTime: 1.3,
         speed: 0.75, // Slow
         range: 0.8,
         sightRange: 5.5,
@@ -72,6 +76,7 @@ export const Cards: Record<string, EntityStats> = {
         hp: 720,
         damage: 218,
         hitSpeed: 1.1,
+        loadTime: 0.6,
         speed: 1.0, // Medium
         range: 6.0,
         sightRange: 6.0,
@@ -88,6 +93,7 @@ export const Cards: Record<string, EntityStats> = {
         hp: 1696,
         damage: 318,
         hitSpeed: 1.6,
+        loadTime: 1.0,
         speed: 2.0, // Very Fast
         range: 0.8,
         sightRange: 5.5,
@@ -105,6 +111,7 @@ export const Cards: Record<string, EntityStats> = {
         hp: 81,
         damage: 81,
         hitSpeed: 1.0,
+        loadTime: 0.5,
         speed: 1.5, // Fast
         range: 0.8,
         sightRange: 5.5,
@@ -122,6 +129,7 @@ export const Cards: Record<string, EntityStats> = {
         hp: 1341,
         damage: 382,
         hitSpeed: 1.4,
+        loadTime: 1.0,
         speed: 2.0, // Very Fast
         range: 0.8,
         sightRange: 5.5,
@@ -139,6 +147,7 @@ export const Cards: Record<string, EntityStats> = {
         hp: 1999,
         damage: 202,
         hitSpeed: 1.2,
+        loadTime: 0.7,
         speed: 1.0, // Medium
         range: 0.8,
         sightRange: 5.5,
@@ -154,6 +163,7 @@ export const Cards: Record<string, EntityStats> = {
         type: 'troop',
         hp: 81,
         damage: 81,
+        loadTime: 0.5,
         hitSpeed: 1.0,
         speed: 1.5, // Fast
         range: 0.8,
@@ -173,6 +183,7 @@ export const Cards: Record<string, EntityStats> = {
         type: 'troop',
         hp: 81,
         damage: 81,
+        loadTime: 0.5,
         hitSpeed: 1.0,
         speed: 1.5, // Fast
         range: 0.8,
@@ -190,6 +201,7 @@ export const Cards: Record<string, EntityStats> = {
         type: 'troop',
         hp: 1800,
         damage: 160,
+        loadTime: 0.5,
         hitSpeed: 0.9,
         speed: 1.0, // Medium
         range: 1.2,
@@ -202,7 +214,7 @@ export const Cards: Record<string, EntityStats> = {
             name: 'Dashing Dash',
             cooldown: 11,
             elixirCost: 1,
-            effect: 'dashing_dash',
+            effect: 'dash',
             radius: 5.0
         }
     },
@@ -213,19 +225,19 @@ export const Cards: Record<string, EntityStats> = {
         hp: 1000,
         damage: 225,
         hitSpeed: 1.2,
-        speed: 1.0, // Medium
+        loadTime: 0.5,
+        speed: 1.0,
         range: 5.0,
-        sightRange: 5.0,
-        radius: 0.5,
-        mass: 3,
+        sightRange: 5.5,
+        radius: 0.4,
+        mass: 4,
         isAir: false,
-        targetType: 'all',
-        projectileSpeed: 10,
+        targetType: 'ground',
         ability: {
             name: 'Cloaking Cape',
             cooldown: 15,
             elixirCost: 1,
-            effect: 'cloaking_cape',
+            effect: 'cloak',
             duration: 3.0
         }
     },    elite_knight: {
@@ -234,6 +246,7 @@ export const Cards: Record<string, EntityStats> = {
         type: 'troop',
         hp: 1666, // Base stats same as normal knight
         damage: 202,
+        loadTime: 0.5,
         hitSpeed: 1.2,
         speed: 1.0, // Medium
         range: 1.2,
@@ -257,6 +270,7 @@ export const Cards: Record<string, EntityStats> = {
         type: 'troop',
         hp: 883, // Exactly 883 HP per Season 77
         damage: 204, // Ranged attack damage
+        loadTime: 0.5,
         hitSpeed: 1.3, // 1.3s hit speed
         speed: 1.0, // Medium
         range: 6.0,
@@ -279,6 +293,7 @@ export const Cards: Record<string, EntityStats> = {
         type: 'building',
         hp: 350,
         damage: 100,
+        loadTime: 0.5,
         hitSpeed: 1.0,
         speed: 0,
         range: 3.5, // 2026 Feb balance change
@@ -296,6 +311,7 @@ export const Cards: Record<string, EntityStats> = {
         type: 'troop',
         hp: 4091, // Exactly same as 11级 Giant
         damage: 254,
+        loadTime: 0.5,
         hitSpeed: 1.5,
         speed: 0.5, // Slow
         range: 1.2,
@@ -317,9 +333,10 @@ export const Cards: Record<string, EntityStats> = {
         id: 'battle_healer',
         name: 'Battle Healer',
         type: 'troop',
-        hp: 1717,
-        damage: 148,
+        hp: 1584,
+        damage: 135,
         hitSpeed: 1.5,
+        loadTime: 0.5,
         speed: 1.0, // Medium
         range: 0.8,
         sightRange: 5.5,
@@ -332,9 +349,10 @@ export const Cards: Record<string, EntityStats> = {
         id: 'princess_tower',
         name: 'Princess Tower',
         type: 'tower',
-        hp: 3052,
-        damage: 109,
+        hp: 2534,
+        damage: 90,
         hitSpeed: 0.8,
+        loadTime: 0.1,
         speed: 0,
         range: 7.5,
         sightRange: 7.5,
@@ -348,9 +366,10 @@ export const Cards: Record<string, EntityStats> = {
         id: 'king_tower',
         name: 'King Tower',
         type: 'tower',
-        hp: 4824,
-        damage: 109,
+        hp: 4008,
+        damage: 90,
         hitSpeed: 1.0,
+        loadTime: 0.2,
         speed: 0,
         range: 7.0,
         sightRange: 7.0,

@@ -583,13 +583,13 @@ export class Entity {
                 for (const e of this.game.entities) {
                     if (e.team === this.team && e.stats.name === 'King Tower' && e.activationState === 'asleep') {
                         e.activationState = 'activating';
-                        e.activationTimer = 97 / 12.0; // 97 frames at 12fps
+                        e.activationTimer = 97 / 30.0; // 97 frames at 30fps
                     }
                 }
             }
         } else if (this.stats.name === 'King Tower' && this.activationState === 'asleep') {
             this.activationState = 'activating';
-            this.activationTimer = 97 / 12.0;
+            this.activationTimer = 97 / 30.0;
         }
     }
 }

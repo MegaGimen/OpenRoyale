@@ -6,8 +6,8 @@ export const CONFIG = {
     RIVER_Y_START: 15,
     RIVER_Y_END: 17,
     BRIDGE_WIDTH: 2,
-    LEFT_BRIDGE_X: 3, // Coordinates from left edge
-    RIGHT_BRIDGE_X: 13,
+    LEFT_BRIDGE_X: 2, // Center is 3 (aligns with left Princess Tower)
+    RIGHT_BRIDGE_X: 14, // Center is 15 (aligns with right Princess Tower)
 };
 
 // Unit speeds in tiles per second

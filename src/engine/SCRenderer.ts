@@ -50,13 +50,19 @@ export class SCRenderer {
         if (!shapeData) return;
 
         let tint = 0xFFFFFF;
-        if (colorTransformId !== null && data.color_transforms && data.color_transforms[colorTransformId]) {
-            const ct = data.color_transforms[colorTransformId];
-            if (ct && ct.length >= 8) {
-                const mulR = ct[4], mulG = ct[5], mulB = ct[6];
+        let alpha = 1.0;
+        if (colorTransformId !== null && data.colors && data.colors[colorTransformId]) {
+            const ct = data.colors[colorTransformId];
+            if (ct) {
+                const mulR = Math.floor((ct.r_mul ?? 1.0) * 255);
+                const mulG = Math.floor((ct.g_mul ?? 1.0) * 255);
+                const mulB = Math.floor((ct.b_mul ?? 1.0) * 255);
                 tint = (mulR << 16) + (mulG << 8) + mulB;
+                alpha = ct.a_mul ?? 1.0;
             }
         }
+
+        if (alpha <= 0.01) return;
 
         const actualTransform = new PIXI.Matrix();
         actualTransform.prepend(transformMatrix);
@@ -87,15 +93,20 @@ export class SCRenderer {
 
             const mesh = new PIXI.Mesh({ geometry, texture: tex });
             mesh.tint = tint;
+            mesh.alpha = alpha;
             container.addChild(mesh);
         }
     }
 
-    static renderMovieClip(data: any, textures: PIXI.Texture[], clipId: number, parentContainer: PIXI.Container, parentMatrix: PIXI.Matrix, colorTrans: number | null, frameIdx: number) {
+    static renderMovieClip(data: any, textures: PIXI.Texture[], clipId: number, parentContainer: PIXI.Container, parentMatrix: PIXI.Matrix, colorTrans: number | null, frameIdx: number, aimAngle: number = -1, bindName: string | null = null, animProgress: number = -1) {
         const clip = data.movieclips[clipId];
         if (!clip) return;
         
-        const frame = clip.frames[frameIdx % clip.frames.length];
+        let actualFrameIdx = frameIdx;
+        if (animProgress >= 0) {
+            actualFrameIdx = Math.min(Math.floor(animProgress * clip.frames.length), clip.frames.length - 1);
+        }
+        const frame = clip.frames[actualFrameIdx % clip.frames.length];
         if (!frame || !frame.elements) return;
 
         for (const el of frame.elements) {
@@ -107,21 +118,27 @@ export class SCRenderer {
             const currentMatrix = new PIXI.Matrix();
             if (el.matrix !== 65535 && data.matrices && data.matrices[el.matrix]) {
                 const m = data.matrices[el.matrix];
-                currentMatrix.set(m[0], m[1], m[2], m[3], m[4], m[5]);
+                currentMatrix.set(m.a, m.b, m.c, m.d, m.tx, m.ty);
             }
             currentMatrix.prepend(parentMatrix);
 
             const ct = el.color !== 65535 ? el.color : colorTrans;
 
             if (data.movieclips[childId]) {
-                this.renderMovieClip(data, textures, childId, parentContainer, currentMatrix, ct, frameIdx);
+                let childFrameIdx = frameIdx;
+                let childAnimProgress = animProgress;
+                if (bind.name === 'turret' && aimAngle !== -1) {
+                    childFrameIdx = aimAngle;
+                    childAnimProgress = -1; // Turret uses absolute frame
+                }
+                this.renderMovieClip(data, textures, childId, parentContainer, currentMatrix, ct, childFrameIdx, aimAngle, bind.name, childAnimProgress);
             } else if (data.shapes[childId]) {
                 this.renderShape(data, textures, childId, parentContainer, currentMatrix, ct);
             }
         }
     }
 
-    static updateEntity(entityId: number, charId: string, action: string, dirSuffix: string, isRed: boolean, frameIndex: number, x: number, y: number, scale: number = 0.55, realAction: string = 'idle') {
+    static updateEntity(entityId: number, charId: string, action: string, dirSuffix: string, isRed: boolean, frameIndex: number, x: number, y: number, scale: number = 0.55, realAction: string = 'idle', aimAngle: number = -1, overrideFlipX: boolean | null = null, animProgress: number = -1) {
         if (!this.app) return;
         
         let container = this.containers.get(entityId);
@@ -142,14 +159,18 @@ export class SCRenderer {
         let mcId: number | undefined = undefined;
         let suffix = `_${action}1_${dirSuffix}`;
         let flipX = false;
-
-        // Custom mapping for Princess Tower and King Tower static states
-        if (action === 'StarTower_base_red' || action === 'StarTower_base_blue' || action === 'KingTower_red' || action === 'KingTower_blue') {
+        
+        if (action.includes('Tower') || action.includes('building')) {
             mcId = data.exports[action];
+            if (overrideFlipX !== null) flipX = overrideFlipX;
         } else {
             // Directional animations
             if (['1', '4', '9'].includes(dirSuffix)) {
                 flipX = true;
+            }
+            if (overrideFlipX !== null) flipX = overrideFlipX;
+
+            if (flipX) {
                 if (dirSuffix === '1') suffix = `_${action}1_3`; 
                 if (dirSuffix === '4') suffix = `_${action}1_6`; 
                 if (dirSuffix === '9') suffix = `_${action}1_7`; 
@@ -176,7 +197,7 @@ export class SCRenderer {
         containerScale.scale(scaleX, scale);
             
         if (mcId !== undefined) {
-            this.renderMovieClip(data, textures, mcId, container, containerScale, null, frameIndex);
+            this.renderMovieClip(data, textures, mcId, container, containerScale, null, frameIndex, aimAngle, null, animProgress);
         }
         
         // Render princess on tower
@@ -199,9 +220,14 @@ export class SCRenderer {
                 if (pKeys.includes(pActionName)) {
                     const pExportId = princessData.exports[pActionName];
                     const princessMatrix = new PIXI.Matrix();
+                    
+                    if (['1', '4', '9'].includes(dirSuffix)) {
+                        princessMatrix.scale(-1, 1);
+                    }
+                    
                     princessMatrix.translate(0, -30); 
                     princessMatrix.prepend(containerScale);
-                    this.renderMovieClip(princessData, princessTextures, pExportId, container, princessMatrix, null, frameIndex);
+                    this.renderMovieClip(princessData, princessTextures, pExportId, container, princessMatrix, null, frameIndex, -1, null, animProgress);
                 }
             }
         }
