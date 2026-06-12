@@ -121,7 +121,7 @@ export class SCRenderer {
         }
     }
 
-    static updateEntity(entityId: number, charId: string, action: string, dirSuffix: string, isRed: boolean, frameIndex: number, x: number, y: number, scale: number = 0.55) {
+    static updateEntity(entityId: number, charId: string, action: string, dirSuffix: string, isRed: boolean, frameIndex: number, x: number, y: number, scale: number = 0.55, realAction: string = 'idle') {
         if (!this.app) return;
         
         let container = this.containers.get(entityId);
@@ -181,11 +181,27 @@ export class SCRenderer {
         
         // Render princess on tower
         if (action === 'StarTower_base_red' || action === 'StarTower_base_blue') {
-            const princessAction = `princess_tower_attack1_1`;
+            const teamStr = isRed ? '_red' : '';
+            let pActionName = `princess_tower${teamStr}_idle1_1`;
+            
+            // Reconstruct dir suffix for princess if it's flipped
+            let pDirSuffix = dirSuffix;
+            if (['1', '4', '9'].includes(dirSuffix)) {
+                if (dirSuffix === '1') pDirSuffix = '3'; 
+                if (dirSuffix === '4') pDirSuffix = '6'; 
+                if (dirSuffix === '9') pDirSuffix = '7'; 
+            }
+            
+            if (realAction === 'attack') {
+                pActionName = `princess_tower${teamStr}_attack1_${pDirSuffix}`;
+            } else {
+                pActionName = `princess_tower${teamStr}_idle1_${pDirSuffix}`;
+            }
+
             const princessData = this.dataCache['chr_princess'];
             const princessTextures = this.texturesCache['chr_princess'];
             if (princessData && princessTextures) {
-                const pExportId = princessData.exports[princessAction];
+                const pExportId = princessData.exports[pActionName];
                 if (pExportId) {
                     const princessMatrix = new PIXI.Matrix();
                     princessMatrix.translate(0, -30); 

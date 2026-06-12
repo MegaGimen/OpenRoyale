@@ -164,7 +164,7 @@ export class Game {
     }
 
     resolveCollisions() {
-        // Simple O(N^2) collision resolution
+        // Advanced steering behaviors based on official CSV Mass and CollisionRadius
         for (let i = 0; i < this.entities.length; i++) {
             for (let j = i + 1; j < this.entities.length; j++) {
                 const a = this.entities[i];
@@ -172,11 +172,14 @@ export class Game {
 
                 // Skip if both are buildings/towers or both are air
                 if (a.stats.speed === 0 && b.stats.speed === 0) continue;
-                if (a.stats.isAir && b.stats.isAir) continue; // Air units can overlap in CR? Slightly push each other maybe, but let's ignore for now.
+                if (a.stats.isAir && b.stats.isAir) continue; // Air units can overlap
                 if (a.stats.isAir !== b.stats.isAir) continue; // Air and ground don't collide
 
                 const distSq = a.pos.distanceSquaredTo(b.pos);
-                const minDist = a.stats.radius + b.stats.radius;
+                // Convert integer CSV collision radius to tiles (e.g. 750 -> 0.75, 500 -> 0.50)
+                const radiusA = a.stats.radius; 
+                const radiusB = b.stats.radius;
+                const minDist = radiusA + radiusB;
                 
                 if (distSq < minDist * minDist && distSq > 0.0001) {
                     if (a.stats.mass === Infinity && b.stats.mass === Infinity) {
@@ -187,23 +190,30 @@ export class Game {
                     const overlap = minDist - dist;
                     const dir = a.pos.sub(b.pos).normalize();
 
-                    let ratioA, ratioB;
+                    let ratioA = 0.5, ratioB = 0.5;
                     if (a.stats.mass === Infinity) {
-                        ratioA = 0;
-                        ratioB = 1;
+                        ratioA = 0; ratioB = 1;
                     } else if (b.stats.mass === Infinity) {
-                        ratioA = 1;
-                        ratioB = 0;
+                        ratioA = 1; ratioB = 0;
                     } else {
+                        // Official Mass logic: Heavy units completely push aside light units.
+                        // Mass scale: Giant = 18, Knight = 6, Skeleton = 1
                         const totalMass = a.stats.mass + b.stats.mass;
                         ratioA = b.stats.mass / totalMass;
                         ratioB = a.stats.mass / totalMass;
+                        
+                        // Amplify the mass difference to mimic the strict engine repulsion
+                        if (a.stats.mass >= b.stats.mass * 3) {
+                            ratioA = 0.05; ratioB = 0.95; // A dominates B
+                        } else if (b.stats.mass >= a.stats.mass * 3) {
+                            ratioA = 0.95; ratioB = 0.05; // B dominates A
+                        }
                     }
 
                     if (ratioA > 0) a.pos = a.pos.add(dir.mul(overlap * ratioA));
                     if (ratioB > 0) b.pos = b.pos.sub(dir.mul(overlap * ratioB));
                     
-                    // Add consistent slide to perfectly aligned units against buildings
+                    // Sliding along buildings
                     if (a.stats.mass === Infinity || b.stats.mass === Infinity) {
                         const troop = a.stats.mass === Infinity ? b : a;
                         const building = a.stats.mass === Infinity ? a : b;
@@ -215,8 +225,8 @@ export class Game {
                     }
 
                     // Flag for retargeting if physically displaced significantly
-                    if (overlap * ratioA > 0.05) a.wasNudged = true;
-                    if (overlap * ratioB > 0.05) b.wasNudged = true;
+                    if (overlap * ratioA > 0.1) a.wasNudged = true;
+                    if (overlap * ratioB > 0.1) b.wasNudged = true;
                 }
             }
         }

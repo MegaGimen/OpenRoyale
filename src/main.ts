@@ -56,7 +56,7 @@ async function loadMappings() {
     loadingUI.appendChild(progressContainer);
     document.body.appendChild(loadingUI);
 
-    const chars = ['chr_knight', 'chr_archer', 'chr_giant', 'chr_pekka', 'chr_minion', 'chr_skeleton', 'chr_barbarian', 'chr_musketeer', 'chr_hog_rider', 'chr_wizard', 'building_tower', 'effects'];
+    const chars = ['chr_knight', 'chr_archer', 'chr_giant', 'chr_pekka', 'chr_minion', 'chr_skeleton', 'chr_barbarian', 'chr_musketeer', 'chr_hog_rider', 'chr_wizard', 'chr_princess', 'building_tower', 'effects'];
     let loaded = 0;
     
     const isCached = localStorage.getItem('sc_assets_cached') === 'true';
@@ -372,16 +372,29 @@ function initRenderer() {
                 div.style.borderRadius = '0';
                 div.style.border = 'none';
 
+                let finalFrameIndex = frameIndex;
+                if (entity.stats.name === 'King Tower') {
+                    if (entity.activationState === 'asleep') {
+                        finalFrameIndex = 0;
+                    } else if (entity.activationState === 'activating') {
+                        const totalFrames = 97;
+                        finalFrameIndex = Math.max(0, totalFrames - Math.floor(entity.activationTimer * 12));
+                    } else {
+                        finalFrameIndex = 97;
+                    }
+                }
+
                 SCRenderer.updateEntity(
                     entity.id, 
                     charPrefixStr, 
                     actionToPass, 
                     dirSuffix, 
                     isRed, 
-                    frameIndex, 
+                    finalFrameIndex, 
                     entity.pos.x * pxPerTileX, 
                     entity.pos.y * pxPerTileY, 
-                    0.55
+                    0.55,
+                    action
                 );
                 
                 scaleMultiplier = 0.55;

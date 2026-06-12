@@ -24,6 +24,7 @@ export interface EntityStats {
     hp: number;
     damage: number;
     hitSpeed: number; // in seconds
+    loadTime: number; // in seconds (time from attack start to damage point)
     speed: number; // in tiles/sec (0 for buildings)
     range: number; // attack range in tiles
     sightRange: number; // aggro range
@@ -65,10 +66,17 @@ export class Entity {
     // State
     target: Entity | null = null;
     attackCooldown: number = 0;
+    actionFrameTimer: number = -1; // -1 means not in attack animation
+    isAttacking: boolean = false;
     isMoving: boolean = false;
+    facingDirection: Vector2 = new Vector2(0, 1);
     cloneGroupId: string = ''; // For tracking evo skeleton limits
     wasNudged: boolean = false;
     pathPoints: Vector2[] = []; // For frontend debug visualization
+
+    // Tower State
+    activationState: 'asleep' | 'activating' | 'awake' = 'awake';
+    activationTimer: number = 0;
 
     // Ability State
     abilityCooldown: number = 0;
@@ -83,6 +91,10 @@ export class Entity {
         this.pos = pos;
         this.hp = stats.hp;
         this.game = game;
+        
+        if (stats.name === 'King Tower') {
+            this.activationState = 'asleep';
+        }
         
         // Assign a random group ID for cloned swarms like Evo Skeletons
         this.cloneGroupId = Math.random().toString(36).substring(7);
@@ -133,6 +145,14 @@ export class Entity {
             if (this.hp <= 0) {
                 this.hp = 0;
                 return;
+            }
+        }
+
+        // Tower activation logic
+        if (this.activationState === 'activating') {
+            this.activationTimer -= dt;
+            if (this.activationTimer <= 0) {
+                this.activationState = 'awake';
             }
         }
 
@@ -226,36 +246,67 @@ export class Entity {
         // 1. Find or update target
         this.updateTarget();
 
+        // Decrement attack cooldown if we are not currently in the load phase of an attack
+        if (!this.isAttacking && this.attackCooldown > 0) {
+            let dtScaled = dt;
+            if (this.currentAbilityEffect === 'cloaking_cape') dtScaled = dt * 1.8;
+            this.attackCooldown -= dtScaled;
+        }
+
         // 2. Move or Attack
         if (this.target) {
             const dist = this.pos.distanceTo(this.target.pos) - this.stats.radius - this.target.stats.radius;
             if (dist <= this.stats.range) {
                 // In range, attack
                 this.pathPoints = [];
-                this.attackCooldown -= dt;
                 
-                // Archer Queen Cloaking Cape attack speed boost (+180%)
-                if (this.currentAbilityEffect === 'cloaking_cape') {
-                    this.attackCooldown -= dt * 1.8;
+                // Always face the target while in attack range
+                if (this.target.pos.x !== this.pos.x || this.target.pos.y !== this.pos.y) {
+                    this.facingDirection = this.target.pos.sub(this.pos).normalize();
                 }
-                
-                if (this.attackCooldown <= 0) {
-                    this.attack(this.target);
-                    this.attackCooldown = this.stats.hitSpeed;
+
+                if (this.attackCooldown <= 0 && !this.isAttacking) {
+                    // Start attack animation phase (LoadTime)
+                    this.isAttacking = true;
+                    this.actionFrameTimer = this.stats.loadTime || (this.stats.hitSpeed * 0.5); // Fallback if no loadTime
+                }
+
+                if (this.isAttacking) {
+                    let dtScaled = dt;
+                    if (this.currentAbilityEffect === 'cloaking_cape') dtScaled = dt * 1.8;
+                    this.actionFrameTimer -= dtScaled;
+
+                    if (this.actionFrameTimer <= 0) {
+                        // Action frame reached! Apply damage
+                        this.attack(this.target);
+                        this.isAttacking = false;
+                        // Set cooldown for the remainder of the HitSpeed
+                        this.attackCooldown = this.stats.hitSpeed - (this.stats.loadTime || 0);
+                        if (this.attackCooldown < 0) this.attackCooldown = 0.1;
+                    }
                 }
             } else {
-                // Move towards target
+                // Move towards target and cancel any pending attack
+                this.isAttacking = false;
+                this.actionFrameTimer = -1;
                 this.moveTowards(this.target.pos, dt);
                 this.isMoving = true;
             }
         } else if (this.stats.speed > 0) {
             // No target, move towards enemy towers by default
+            this.isAttacking = false;
+            this.actionFrameTimer = -1;
             this.moveTowardsDefault(dt);
             this.isMoving = true;
         }
     }
 
     updateTarget() {
+        if (this.activationState !== 'awake') {
+            this.target = null;
+            return;
+        }
+        
         if (this.target && this.target.hp <= 0) {
             this.target = null;
         }
@@ -426,8 +477,24 @@ export class Entity {
         }
 
         if (this.pathPoints.length > 0) {
-            let dir = this.pathPoints[0].sub(this.pos).normalize();
-            this.pos = this.pos.add(dir.mul(this.stats.speed * dt));
+            let targetWaypoint = this.pathPoints[0];
+            
+            // Look-ahead: if we are extremely close to the immediate waypoint, 
+            // face the next waypoint to prevent spinning/jitter at corners
+            if (this.pathPoints.length > 1 && this.pos.distanceSquaredTo(targetWaypoint) < 1.0) {
+                targetWaypoint = this.pathPoints[1];
+            }
+            
+            let dir = targetWaypoint.sub(this.pos).normalize();
+            if (dir.x !== 0 || dir.y !== 0) {
+                // Smooth facing direction or just set it
+                this.facingDirection = dir;
+            }
+            
+            // But we actually physically move towards the original immediate waypoint 
+            // so we don't cut corners too sharply and clip into rivers
+            let moveDir = this.pathPoints[0].sub(this.pos).normalize();
+            this.pos = this.pos.add(moveDir.mul(this.stats.speed * dt));
         }
     }
 
@@ -510,6 +577,19 @@ export class Entity {
         this.hp -= finalDamage;
         if (this.hp <= 0) {
             this.hp = 0;
+            
+            // If this is a Princess Tower, wake up the King Tower
+            if (this.stats.name === 'Princess Tower') {
+                for (const e of this.game.entities) {
+                    if (e.team === this.team && e.stats.name === 'King Tower' && e.activationState === 'asleep') {
+                        e.activationState = 'activating';
+                        e.activationTimer = 97 / 12.0; // 97 frames at 12fps
+                    }
+                }
+            }
+        } else if (this.stats.name === 'King Tower' && this.activationState === 'asleep') {
+            this.activationState = 'activating';
+            this.activationTimer = 97 / 12.0;
         }
     }
 }
