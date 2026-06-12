@@ -59,7 +59,6 @@ export class SCRenderer {
         }
 
         const actualTransform = new PIXI.Matrix();
-        actualTransform.scale(1, -1);
         actualTransform.prepend(transformMatrix);
 
         for (const part of shapeData) {
