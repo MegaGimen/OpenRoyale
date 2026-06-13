@@ -255,7 +255,7 @@ function initRenderer() {
             const currentZOffset = startHeight + (endHeight - startHeight) * progress + arcOffset;
             const scaleP = p.trajectory === 'parabola' ? 0.7 : 0.6;
 
-            SCRenderer.updateProjectile(p.id, arrowKey, angle, p.pos.x * pxPerTileX, p.pos.y * pxPerTileY + currentZOffset, scaleP);
+            SCRenderer.updateProjectile(p.id, arrowKey, angle, p.pos.x * pxPerTileX, p.pos.y * pxPerTileY + currentZOffset, scaleP, globalFrameIndex);
         }
 
         // Update Abilities UI

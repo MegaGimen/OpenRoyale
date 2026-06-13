@@ -101,7 +101,7 @@ export class SCRenderer {
         }
     }
 
-    static renderMovieClip(data: any, textures: PIXI.Texture[], clipId: number, parentContainer: PIXI.Container, parentMatrix: PIXI.Matrix, colorTrans: number | null, frameIdx: number, aimAngle: number = -1, bindName: string | null = null, animProgress: number = -1, globalFrameIndex: number = 0) {
+    static renderMovieClip(data: any, textures: PIXI.Texture[], clipId: number, parentContainer: PIXI.Container, parentMatrix: PIXI.Matrix, colorTrans: number | null, frameIdx: number, aimAngle: number = -1, bindName: string | null = null, animProgress: number = -1, globalFrameIndex: number = 0, blendMode: string | null = null) {
         const clip = data.movieclips[clipId];
         if (!clip) return;
         
@@ -127,6 +127,8 @@ export class SCRenderer {
 
             const ct = el.color !== 65535 ? el.color : colorTrans;
 
+            const childBlend = bind.blend || blendMode;
+
             if (data.movieclips[childId]) {
                 let childFrameIdx = frameIdx;
                 let childAnimProgress = animProgress;
@@ -137,9 +139,9 @@ export class SCRenderer {
                     childFrameIdx = globalFrameIndex;
                     childAnimProgress = -1; // Idle loops naturally
                 }
-                this.renderMovieClip(data, textures, childId, parentContainer, currentMatrix, ct, childFrameIdx, aimAngle, bind.name, childAnimProgress, globalFrameIndex);
+                this.renderMovieClip(data, textures, childId, parentContainer, currentMatrix, ct, childFrameIdx, aimAngle, bind.name, childAnimProgress, globalFrameIndex, childBlend);
             } else if (data.shapes[childId]) {
-                this.renderShape(data, textures, childId, parentContainer, currentMatrix, ct, bind.blend);
+                this.renderShape(data, textures, childId, parentContainer, currentMatrix, ct, childBlend);
             }
         }
     }
