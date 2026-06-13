@@ -373,10 +373,30 @@ function initRenderer() {
 
             if (charFolder) {
                 let action = 'idle';
-                if (entity.isAttacking || (entity.attackCooldown > 0 && entity.target)) {
+                let animProgress = -1;
+
+                if (entity.isAttacking) {
                     action = 'attack';
+                    const loadTime = entity.stats.loadTime || (entity.stats.hitSpeed * 0.5);
+                    const elapsed = loadTime - entity.actionFrameTimer;
+                    animProgress = 0.5 * (elapsed / loadTime);
                 } else if (entity.isMoving) {
                     action = 'run';
+                } else if (entity.attackCooldown > 0 && entity.target) {
+                    const loadTime = entity.stats.loadTime || (entity.stats.hitSpeed * 0.5);
+                    const cooldownTotal = entity.stats.hitSpeed - loadTime;
+                    const elapsedAfterHit = cooldownTotal - entity.attackCooldown;
+                    const followThroughDuration = Math.min(loadTime, cooldownTotal);
+                    
+                    if (elapsedAfterHit < followThroughDuration) {
+                        action = 'attack';
+                        animProgress = 0.5 + 0.5 * (elapsedAfterHit / followThroughDuration);
+                    } else {
+                        action = 'idle';
+                    }
+                }
+                if (animProgress !== -1) {
+                    animProgress = Math.max(0, Math.min(1, animProgress));
                 }
                 
                 const dir = entity.facingDirection || new Vector2(0, 1);
@@ -397,18 +417,6 @@ function initRenderer() {
                 const charPrefixStr = charFolder.startsWith('building_') ? charFolder : `chr_${charFolder}`;
                 const t = performance.now() / 1000;
                 const frameIndex = Math.floor(t * 30);
-                
-                let animProgress = -1;
-                if (action === 'attack') {
-                    const loadTime = entity.stats.loadTime || (entity.stats.hitSpeed * 0.5);
-                    if (entity.isAttacking) {
-                        animProgress = (loadTime - entity.actionFrameTimer) / entity.stats.hitSpeed;
-                    } else {
-                        const cooldownTotal = entity.stats.hitSpeed - loadTime;
-                        animProgress = (loadTime + (cooldownTotal - entity.attackCooldown)) / entity.stats.hitSpeed;
-                    }
-                    animProgress = Math.max(0, Math.min(1, animProgress));
-                }
                 
                 const isRed = entity.team === 'red';
                 const actionToPass = isTower ? staticAnimKey : action;
