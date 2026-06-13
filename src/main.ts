@@ -374,27 +374,44 @@ function initRenderer() {
             if (charFolder) {
                 let action = 'idle';
                 let animProgress = -1;
+                const attackAnimDuration = 0.4; // Fixed duration for a snappy wind-up
 
                 if (entity.isAttacking) {
-                    action = 'attack';
                     const loadTime = entity.stats.loadTime || (entity.stats.hitSpeed * 0.5);
                     const elapsed = loadTime - entity.actionFrameTimer;
-                    animProgress = 0.5 * (elapsed / loadTime);
+                    
+                    if (loadTime > attackAnimDuration) {
+                        if (elapsed < loadTime - attackAnimDuration) {
+                            action = 'idle';
+                            animProgress = -1;
+                        } else {
+                            action = 'attack';
+                            const swingElapsed = elapsed - (loadTime - attackAnimDuration);
+                            animProgress = 0.5 * (swingElapsed / attackAnimDuration);
+                        }
+                    } else {
+                        action = 'attack';
+                        animProgress = 0.5 * (elapsed / loadTime);
+                    }
                 } else if (entity.isMoving) {
                     action = 'run';
                 } else if (entity.attackCooldown > 0 && entity.target) {
                     const loadTime = entity.stats.loadTime || (entity.stats.hitSpeed * 0.5);
                     const cooldownTotal = entity.stats.hitSpeed - loadTime;
                     const elapsedAfterHit = cooldownTotal - entity.attackCooldown;
-                    const followThroughDuration = Math.min(loadTime, cooldownTotal);
+                    
+                    const actualWindup = Math.min(loadTime, attackAnimDuration);
+                    const followThroughDuration = Math.min(actualWindup, cooldownTotal);
                     
                     if (elapsedAfterHit < followThroughDuration) {
                         action = 'attack';
                         animProgress = 0.5 + 0.5 * (elapsedAfterHit / followThroughDuration);
                     } else {
                         action = 'idle';
+                        animProgress = -1;
                     }
                 }
+                
                 if (animProgress !== -1) {
                     animProgress = Math.max(0, Math.min(1, animProgress));
                 }
