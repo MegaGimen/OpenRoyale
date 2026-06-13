@@ -33,6 +33,8 @@ export const Cards: Record<string, EntityStats> = {
         isAir: false,
         targetType: 'all',
         projectileSpeed: 10,
+        projectileAsset: 'projectile_arrow_basic',
+        projectileTrajectory: 'parabola',
         spawnCount: 2,
         spawnRadius: 0.8
     },
@@ -84,7 +86,9 @@ export const Cards: Record<string, EntityStats> = {
         mass: 4,
         isAir: false,
         targetType: 'all',
-        projectileSpeed: 10
+        projectileSpeed: 10,
+        projectileAsset: 'projectile_cannonball_small',
+        projectileTrajectory: 'line'
     },
     hog_rider: {
         id: 'hog_rider',
@@ -173,7 +177,10 @@ export const Cards: Record<string, EntityStats> = {
         mass: 4,
         isAir: false,
         targetType: 'all',
-        projectileSpeed: 10
+        projectileSpeed: 10,
+        projectileAsset: 'fireball_projectile1',
+        projectileTrajectory: 'line',
+        splashRadius: 1.5
     },
     princess: {
         id: 'princess',
@@ -190,7 +197,10 @@ export const Cards: Record<string, EntityStats> = {
         mass: 2,
         isAir: false,
         targetType: 'all',
-        projectileSpeed: 10
+        projectileSpeed: 10,
+        projectileAsset: 'projectile_princess',
+        projectileTrajectory: 'parabola',
+        splashRadius: 2.0
     },
     princess_tower: {
         id: 'princess_tower',
@@ -207,7 +217,9 @@ export const Cards: Record<string, EntityStats> = {
         mass: Infinity,
         isAir: false,
         targetType: 'all',
-        projectileSpeed: 10
+        projectileSpeed: 10,
+        projectileAsset: 'projectile_arrow_basic',
+        projectileTrajectory: 'parabola'
     },
     king_tower: {
         id: 'king_tower',
@@ -224,6 +236,8 @@ export const Cards: Record<string, EntityStats> = {
         mass: Infinity,
         isAir: false,
         targetType: 'all',
-        projectileSpeed: 15
+        projectileSpeed: 15,
+        projectileAsset: 'projectile_cannonball_large',
+        projectileTrajectory: 'line'
     }
 };

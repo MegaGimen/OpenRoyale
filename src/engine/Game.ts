@@ -13,6 +13,9 @@ export interface Projectile {
     damage: number;
     speed: number;
     team: 'blue' | 'red';
+    splashRadius?: number;
+    asset?: string;
+    trajectory?: 'line' | 'parabola';
     onHit?: () => void;
 }
 
@@ -29,6 +32,7 @@ export class Game {
     entities: Entity[] = [];
     projectiles: Projectile[] = [];
     effects: VisualEffect[] = [];
+    aoeCircles: {id: number, pos: Vector2, radius: number, startTime: number, duration: number}[] = [];
     nextEntityId: number = 1;
     nextProjectileId: number = 1;
     nextEffectId: number = 1;
@@ -103,7 +107,29 @@ export class Game {
 
             if (dist <= moveDist) {
                 // Hit!
-                p.target.takeDamage(p.damage);
+                if (p.splashRadius) {
+                    for (const e of this.entities) {
+                        if (e.team !== p.team && e.hp > 0) {
+                            // Only apply damage if the target type is compatible. Since Wizard/Princess/King Tower target 'all', they can hit anything.
+                            // However, we should be safe and check if the entity can be targeted by the source. But for simplicity, we just damage all enemies in radius.
+                            const d = e.pos.dist(p.pos);
+                            if (d <= p.splashRadius + e.stats.radius) {
+                                e.takeDamage(p.damage);
+                            }
+                        }
+                    }
+                    // Store the splash radius circle to render it
+                    this.aoeCircles.push({
+                        id: this.nextEffectId++, // Use effect ID counter for uniqueness
+                        pos: p.pos.clone(),
+                        radius: p.splashRadius,
+                        startTime: this.timeElapsed,
+                        duration: 0.3
+                    });
+                } else {
+                    p.target.takeDamage(p.damage);
+                }
+
                 if (p.onHit) p.onHit();
                 this.projectiles.splice(i, 1);
             } else {
@@ -130,6 +156,7 @@ export class Game {
 
         // Update effects
         this.effects = this.effects.filter(e => this.timeElapsed - e.startTime < e.duration);
+        this.aoeCircles = this.aoeCircles.filter(c => this.timeElapsed - c.startTime < c.duration);
 
         this.resolveCollisions();
         this.constrainEntities();
@@ -195,7 +222,7 @@ export class Game {
         }
     }
 
-    addProjectile(sourceId: string, pos: Vector2, target: Entity, damage: number, speed: number, team: 'blue' | 'red', onHit?: () => void) {
+    addProjectile(sourceId: string, pos: Vector2, target: Entity, damage: number, speed: number, team: 'blue' | 'red', splashRadius?: number, asset?: string, trajectory?: 'line' | 'parabola', onHit?: () => void) {
         this.projectiles.push({
             id: this.nextProjectileId++,
             sourceId,
@@ -205,6 +232,9 @@ export class Game {
             damage,
             speed,
             team,
+            splashRadius,
+            asset,
+            trajectory,
             onHit
         });
     }

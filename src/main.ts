@@ -157,6 +157,7 @@ function initRenderer() {
     const entityDivs = new Map<number, HTMLDivElement>();
     const effectDivs = new Set<number>();
     const projectileDivs = new Map<number, HTMLDivElement>();
+    const aoeDivs = new Map<number, HTMLDivElement>();
     const pathEls = new Map<number, SVGPolylineElement>();
     const abilityBtns = new Map<number, HTMLButtonElement>();
     const redAbilitiesContainer = document.getElementById('red-abilities')!;
@@ -225,22 +226,18 @@ function initRenderer() {
                 if (angle < 0) angle += 360;
             }
 
-            let arrowKey = p.team === 'red' ? 'projectile_arrow_basic_enemy' : 'projectile_arrow_basic';
+            let arrowKey = p.asset || 'projectile_arrow_basic';
+            if (arrowKey === 'projectile_arrow_basic' && p.team === 'red') {
+                arrowKey = 'projectile_arrow_basic_enemy';
+            }
+            
             let startHeight = -20;
             let endHeight = -15; // Body center
             
             if (p.sourceId === 'king_tower') {
-                arrowKey = 'projectile_cannonball_large';
                 startHeight = -25;
-                endHeight = -15;
             } else if (p.sourceId === 'princess_tower' || p.sourceId === 'princess') {
-                arrowKey = p.team === 'red' ? 'projectile_arrow_basic_enemy' : 'projectile_arrow_basic';
                 startHeight = -40; // lowered slightly
-                endHeight = -15;
-            } else if (p.sourceId === 'musketeer' || p.sourceId === 'wizard') {
-                arrowKey = 'projectile_cannonball_small';
-                startHeight = -15;
-                endHeight = -15;
             }
 
             // Calculate progress for Z interpolation
@@ -251,12 +248,12 @@ function initRenderer() {
             
             // Parabolic arc for arrows
             let arcOffset = 0;
-            if (arrowKey.includes('arrow')) {
+            if (p.trajectory === 'parabola') {
                 arcOffset = Math.sin(progress * Math.PI) * -30;
             }
 
             const currentZOffset = startHeight + (endHeight - startHeight) * progress + arcOffset;
-            const scaleP = arrowKey.includes('arrow') ? 0.7 : 0.6; // Slightly larger projectiles
+            const scaleP = p.trajectory === 'parabola' ? 0.7 : 0.6;
 
             SCRenderer.updateProjectile(p.id, arrowKey, angle, p.pos.x * pxPerTileX, p.pos.y * pxPerTileY + currentZOffset, scaleP);
         }
@@ -558,6 +555,46 @@ function initRenderer() {
                     pathEls.delete(entity.id);
                 }
             }
+        }
+
+        // Render AOE Circles
+        const currentAoeIds = new Set(game.aoeCircles.map(c => c.id));
+        for (const [id, div] of aoeDivs.entries()) {
+            if (!currentAoeIds.has(id)) {
+                div.remove();
+                aoeDivs.delete(id);
+            }
+        }
+
+        for (const circle of game.aoeCircles) {
+            let div = aoeDivs.get(circle.id);
+            if (!div) {
+                div = document.createElement('div');
+                div.style.position = 'absolute';
+                div.style.border = '2px solid rgba(255, 100, 100, 0.6)';
+                div.style.backgroundColor = 'rgba(255, 50, 50, 0.2)';
+                div.style.borderRadius = '50%';
+                div.style.pointerEvents = 'none';
+                div.style.zIndex = '5';
+                div.style.transform = 'translate(-50%, -50%)';
+                
+                // Fade out animation
+                div.style.transition = `opacity ${circle.duration}s ease-out`;
+                
+                container.appendChild(div);
+                aoeDivs.set(circle.id, div);
+                
+                // Trigger transition in next frame
+                requestAnimationFrame(() => {
+                    if (div) div.style.opacity = '0';
+                });
+            }
+            
+            const radiusPx = circle.radius * pxPerTileX; // Assuming square tiles
+            div.style.width = `${radiusPx * 2}px`;
+            div.style.height = `${radiusPx * 2}px`;
+            div.style.left = `${circle.pos.x * pxPerTileX}px`;
+            div.style.top = `${circle.pos.y * pxPerTileY}px`;
         }
 
         requestAnimationFrame(render);

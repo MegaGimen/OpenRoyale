@@ -40,8 +40,11 @@ export interface EntityStats {
     isAir: boolean;
     jumpsRiver?: boolean; // For Hog Rider
     
-    // Projectiles
+    // Projectiles & AOE
     projectileSpeed?: number; // E.g. 10 tiles/sec. If undefined, attacks are instant
+    projectileAsset?: string;
+    projectileTrajectory?: 'line' | 'parabola';
+    splashRadius?: number; // If set, deals AOE damage in this radius
 
     // Evolution Mechanics
     movingShieldDamageReduction?: number; // Percentage reduction (e.g. 0.6)
@@ -530,6 +533,9 @@ export class Entity {
                 this.stats.damage,
                 this.stats.projectileSpeed,
                 this.team,
+                this.stats.splashRadius,
+                this.stats.projectileAsset,
+                this.stats.projectileTrajectory,
                 () => this.onDealDamage(target)
             );
         } else {
