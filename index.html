@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clash Royale Engine</title>
+    <style>
+      body {
+        margin: 0;
+        background-color: #2b2b2b;
+        color: white;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: sans-serif;
+      }
+      #game-container {
+        position: relative;
+        background-color: #3b5a26;
+        width: 360px; /* 18 tiles * 20px */
+        height: 640px; /* 32 tiles * 20px */
+        border: 2px solid #555;
+      }
+      .entity {
+        position: absolute;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: left 0.05s linear, top 0.05s linear;
+        z-index: 10;
+      }
+      .tower {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        background-color: #888;
+        border: 2px solid #333;
+        z-index: 10;
+      }
+
+      .ui-panel {
+        margin: 0 20px;
+        width: 300px;
+        background: #1e1e1e;
+        padding: 15px;
+        border-radius: 8px;
+        height: 640px;
+        overflow-y: auto;
+      }
+      .card-btn {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 60px;
+        height: 80px;
+        background: #444;
+        margin: 5px;
+        border: 2px solid #666;
+        cursor: pointer;
+        text-align: center;
+        font-size: 11px;
+        user-select: none;
+        vertical-align: top;
+      }
+      .card-btn.selected {
+        border-color: #f00;
+        box-shadow: 0 0 10px #f00;
+      }
+      .blue-team .card-btn.selected {
+        border-color: #00f;
+        box-shadow: 0 0 10px #00f;
+      }
+      .category-title {
+        font-size: 14px;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #555;
+        padding-bottom: 5px;
+        color: #ddd;
+      }
+      .header-title {
+        margin-top: 0;
+        color: #fff;
+      }
+      .abilities-container {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-bottom: 10px;
+      }
+      .ability-btn {
+        padding: 8px;
+        background-color: #ffd700;
+        color: #000;
+        font-weight: bold;
+        border: 2px solid #b8860b;
+        border-radius: 4px;
+        cursor: pointer;
+        text-align: center;
+      }
+      .ability-btn:disabled {
+        background-color: #555;
+        color: #888;
+        border-color: #333;
+        cursor: not-allowed;
+      }
+    </style>
+    <script type="module" crossorigin src="/OpenRoyale/assets/index-BPAE5eXx.js"></script>
+    <link rel="modulepreload" crossorigin href="/OpenRoyale/assets/Geometry-C7Em0fPc.js">
+    <link rel="modulepreload" crossorigin href="/OpenRoyale/assets/GCManagedHash-Cu_NlyPQ.js">
+    <link rel="modulepreload" crossorigin href="/OpenRoyale/assets/Filter-E_TNauVt.js">
+    <link rel="modulepreload" crossorigin href="/OpenRoyale/assets/RenderTargetSystem-DJPdUIbA.js">
+    <link rel="modulepreload" crossorigin href="/OpenRoyale/assets/canvasUtils-Cd2p_rTp.js">
+    <link rel="stylesheet" crossorigin href="/OpenRoyale/assets/index-CsUDhMuy.css">
+  </head>
+  <body>
+    <div id="red-ui" class="ui-panel red-team">
+      <h3 class="header-title">Red Team (Top)</h3>
+      <p style="font-size: 12px; color: #aaa;">Click to activate Champion/Elite abilities!</p>
+      <div id="red-abilities" class="abilities-container"></div>
+      <div id="red-cards"></div>
+    </div>
+    
+    <div id="game-container"></div>
+    
+    <div id="blue-ui" class="ui-panel blue-team">
+      <h3 class="header-title">Blue Team (Bottom)</h3>
+      <p style="font-size: 12px; color: #aaa;">Click to activate Champion/Elite abilities!</p>
+      <div id="blue-abilities" class="abilities-container"></div>
+      <div id="blue-cards"></div>
+    </div>
+  </body>
+</html>
