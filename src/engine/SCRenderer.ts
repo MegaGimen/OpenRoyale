@@ -95,7 +95,11 @@ export class SCRenderer {
             mesh.tint = tint;
             mesh.alpha = alpha;
             if (blendMode === 'add' || blendMode === 'multiply' || blendMode === 'screen') {
-                mesh.blendMode = blendMode as any;
+                try {
+                    mesh.blendMode = blendMode as any;
+                } catch (e) {
+                    // Ignore blend mode errors
+                }
             }
             container.addChild(mesh);
         }

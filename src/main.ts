@@ -5,6 +5,7 @@ import { CONFIG } from './engine/config';
 import type { EntityStats } from './engine/Entity';
 import { Cards } from './engine/Cards';
 import { SCRenderer } from './engine/SCRenderer';
+import * as PIXI from 'pixi.js';
 
 const game = new Game();
 
@@ -115,30 +116,6 @@ function initRenderer() {
     const container = document.getElementById('game-container')!;
     const pxPerTileX = container.clientWidth / CONFIG.ARENA_WIDTH;
     const pxPerTileY = container.clientHeight / CONFIG.ARENA_HEIGHT;
-
-    // Add River
-    const river = document.createElement('div');
-    river.style.position = 'absolute';
-    river.style.backgroundColor = '#4a90e2';
-    river.style.left = '0';
-    river.style.top = `${CONFIG.RIVER_Y_START * pxPerTileY}px`;
-    river.style.width = '100%';
-    river.style.height = `${(CONFIG.RIVER_Y_END - CONFIG.RIVER_Y_START) * pxPerTileY}px`;
-    river.style.zIndex = '1';
-    container.appendChild(river);
-
-    // Add Bridges
-    [CONFIG.LEFT_BRIDGE_X, CONFIG.RIGHT_BRIDGE_X].forEach(x => {
-        const bridge = document.createElement('div');
-        bridge.style.position = 'absolute';
-        bridge.style.backgroundColor = '#8b5a2b';
-        bridge.style.left = `${x * pxPerTileX}px`;
-        bridge.style.top = `${CONFIG.RIVER_Y_START * pxPerTileY}px`;
-        bridge.style.width = `${CONFIG.BRIDGE_WIDTH * pxPerTileX}px`;
-        bridge.style.height = `${(CONFIG.RIVER_Y_END - CONFIG.RIVER_Y_START) * pxPerTileY}px`;
-        bridge.style.zIndex = '2';
-        container.appendChild(bridge);
-    });
 
     // Add SVG overlay for paths
     const pathSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -256,7 +233,7 @@ function initRenderer() {
             const scaleP = p.trajectory === 'parabola' ? 0.7 : 0.6;
             
             const globalFrameIndex = Math.floor(game.timeElapsed * 30);
-            SCRenderer.updateProjectile(p.id, arrowKey, angle, p.pos.x * pxPerTileX, p.pos.y * pxPerTileY + currentZOffset, scaleP, globalFrameIndex);
+            SCRenderer.updateProjectile(p.id, arrowKey, angle, p.pos.x * pxPerTileX, p.pos.y * pxPerTileY + currentZOffset, scaleP);
         }
 
         // Update Abilities UI
@@ -601,7 +578,86 @@ function initRenderer() {
         requestAnimationFrame(render);
     }
 
-    SCRenderer.init(container).then(() => {
+    SCRenderer.init(container).then(async () => {
+        const app = SCRenderer.app;
+        
+        // Remove HTML background elements
+        document.getElementById('river')?.remove();
+        document.querySelectorAll('.bridge').forEach(e => e.remove());
+        document.getElementById('game-container')!.style.backgroundColor = 'transparent';
+        document.body.style.backgroundColor = '#3b5a26';
+
+        const bgContainer = new PIXI.Container();
+        bgContainer.zIndex = -100;
+        app.stage.addChild(bgContainer);
+        app.stage.sortableChildren = true;
+
+        // Load background textures
+        const getTexPath = (i: number) => `/assets/sc/level_barbarian_arena_out/level_barbarian_arena_sprite_${i.toString().padStart(2, '0')}.png`;
+        const bridgeTexAsset = await PIXI.Assets.load(getTexPath(4));
+        const grassTexAsset = await PIXI.Assets.load(getTexPath(24));
+        const riverTexAsset = await PIXI.Assets.load(getTexPath(25));
+
+        // The background sprites are all 1195x1622 and their local origin (center of river) 
+        // is at exactly pixel x=384, y=811.
+        // Playable area width in SC coordinates is ~768. Our screen width is 360.
+        const scPlayableWidth = 768;
+        const scale = app.screen.width / scPlayableWidth;
+        bgContainer.scale.set(scale);
+        
+        // We want the SC origin (center of the image) to map to our logical center (x=9, y=16)
+        // Since pxPerTileX = 20, pxPerTileY = 20, the logical center is exactly at (180, 320)
+        // which is also exactly app.screen.width/2, app.screen.height/2.
+        bgContainer.x = app.screen.width / 2;
+        bgContainer.y = app.screen.height / 2;
+        // Base checkerboard grass to fill all gaps
+        const grassTex = new PIXI.Texture({
+            source: grassTexAsset.source,
+            frame: new PIXI.Rectangle(380, 1067, 128, 128)
+        });
+        for (let y = -800; y <= 800; y += 128) {
+            for (let x = -700; x <= 700; x += 128) {
+                const g = new PIXI.Sprite(grassTex);
+                g.anchor.set(0.5);
+                g.x = x;
+                g.y = y;
+                bgContainer.addChild(g);
+            }
+        }
+
+
+
+        // Bridges
+        const bridgeTex = bridgeTexAsset; 
+
+        // Left Bridge
+        const bridgeL = new PIXI.Sprite(bridgeTex);
+        bridgeL.anchor.set(0.5);
+        bridgeL.x = -213.33; // 5 tiles left
+        bridgeL.y = 0;
+        bgContainer.addChild(bridgeL);
+
+        // Right Bridge
+        const bridgeR = new PIXI.Sprite(bridgeTex);
+        bridgeR.anchor.set(0.5);
+        bridgeR.x = 213.33; // 5 tiles right
+        bridgeR.y = 0;
+        bgContainer.addChild(bridgeR);
+        
+        // River tiling
+        const riverTex = new PIXI.Texture({
+            source: riverTexAsset.source,
+            frame: new PIXI.Rectangle(404, 1088, 80, 86)
+        });
+        for (let x = -384; x <= 384; x += 80) {
+            const r = new PIXI.Sprite(riverTex);
+            r.anchor.set(0.5);
+            r.x = x;
+            r.y = 0; // River is exactly at Y=0 (center)
+            bgContainer.addChild(r);
+        }
+
+
         render();
     });
 

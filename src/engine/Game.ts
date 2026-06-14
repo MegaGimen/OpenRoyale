@@ -105,7 +105,7 @@ export class Game {
             const dist = dir.mag();
             const moveDist = p.speed * dt;
 
-            if (dist <= moveDist) {
+            if (dist <= moveDist + p.target.stats.radius) {
                 // Hit!
                 if (p.splashRadius) {
                     for (const e of this.entities) {

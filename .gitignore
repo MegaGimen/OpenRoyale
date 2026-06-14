@@ -25,3 +25,22 @@ dist-ssr
 
 
 crash
+
+# Helper and test scripts/assets
+check_*
+test_*
+find_*
+get_*
+create_*
+screenshot_*
+test_*.png
+*.patch
+gallery_screenshot.png
+*.txt
+public/temp_sprites/
+public/preview.html
+public/sprites_index.html
+public/test_arena_layout.html
+public/test_arena_sprites.html
+public/test_bg_measure.html
+src/engine/Game.ts.orig

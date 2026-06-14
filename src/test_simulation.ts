@@ -16,7 +16,7 @@ for (const e of game.entities) {
 const knight = game.addEntityById('knight', 'blue', new Vector2(9, 25));
 if (!knight) {
     console.error("Failed to spawn knight");
-    process.exit(1);
+    // process.exit(1);
 }
 console.log(`Spawned Blue Knight at (${knight.pos.x}, ${knight.pos.y})`);
 

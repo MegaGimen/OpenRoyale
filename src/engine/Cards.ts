@@ -199,7 +199,7 @@ export const Cards: Record<string, EntityStats> = {
         targetType: 'all',
         projectileSpeed: 10,
         projectileAsset: 'projectile_princess',
-        projectileTrajectory: 'parabola',
+        projectileTrajectory: 'line',
         splashRadius: 2.0
     },
     princess_tower: {
