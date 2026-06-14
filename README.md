@@ -9,6 +9,10 @@
 * **物理与碰撞检测**：包含目标追踪、攻击范围判定、弹道碰撞检测（支持根据目标体积半径计算命中判定）。
 * **自动化构建**：使用 Vite 作为构建工具，提供极速的热重载和生产包打包功能。
 
+在线游玩（稳定）[Github Page](https://megagimen.github.io/OpenRoyale/)
+
+在线游玩（beta）[OpenRoyale](https://llinker.com/OpenRoyale/)
+
 ## 启动方式
 
 项目依赖 Node.js 环境，启动步骤如下：
