@@ -29,9 +29,6 @@ npm run dev
 npx vite --host 0.0.0.0 --port 5174 --force
 ```
 
-> [!NOTE]
-> 在系统后台，配有 `clash-royale-dev.service` 自启动开发服务，在开机时会自动以端口 `5174` 运行。
-
 ### 3. 项目打包与构建
 编译 TypeScript 并构建生产环境包：
 ```bash
